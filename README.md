@@ -22,7 +22,7 @@ So you get the best of both worlds, ability to connect to nodes like stone, and 
 
 ![image](https://github.com/ChimneySwift/better_fences/blob/master/screenshot_2.png?raw=true)
 
-**Code License:** MIT
+**Code License:** LGPL 2.1+
 
 **Dependencies:** default
 

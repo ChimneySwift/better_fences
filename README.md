@@ -4,7 +4,7 @@ A Minetest mod which solves the fence connection problem.
 
 Recently I was building a house and was quite frustrated that my fence nodes wouldn't connect to the mossy cobblestone:
 
-!(https://i.imgur.com/2oCkkbq.jpg)
+![image](https://i.imgur.com/2oCkkbq.jpg)
 
 So, I submitted [a PR](https://github.com/minetest/minetest_game/issues/2205) to make fences connect to all nodes, and it was promptly closed because running fences along a cobble wall would look terrible. This made total sense, but it was still frustrating because the only 2 options (fences that connect to all nodes and fences that connect to only fences) both look terrible in some situations.
 
@@ -16,11 +16,11 @@ Whenever you place or dig a fence, this mod will determine if the fence you just
 
 This behaviour results in only the fences at the end of a line of fences connecting to all nodes:
 
-!()
+![image](https://github.com/ChimneySwift/better_fences/blob/master/screenshot.png?raw=true)
 
 So you get the best of both worlds, ability to connect to nodes like stone, and also to not have a line of fences running along a wall look like trash:
 
-!()
+![image](https://github.com/ChimneySwift/better_fences/blob/master/screenshot_2.png?raw=true)
 
 **Code License:** MIT
 

@@ -1,6 +1,6 @@
 # Better Fences
 
-Less annoying fences for Minetest.
+A Minetest mod which solves the fence connection problem.
 
 Recently I was building a house and was quite frustrated that my fence nodes wouldn't connect to the mossy cobblestone:
 

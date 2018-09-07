@@ -65,6 +65,9 @@ end
 
 function better_fences.on_place(itemstack, placer, pointed_thing)
     local pos = pointed_thing.above
+    if not (minetest.registered_nodes[minetest.get_node(pos).name].buildable_to) then return end
+    if minetest.is_protected(pos, placer:get_player_name()) then minetest.record_protection_violation(pos, placer:get_player_name()); return end
+
     local def = minetest.registered_nodes[itemstack:get_name()]
     if not def then minetest.log("error", "Could not get node definition for fence placed by "..placer:get_player_name()); return; end
 
@@ -89,6 +92,14 @@ function better_fences.on_dig(pos, node, digger)
     better_fences.update_surrounding(pos)
 end
 
+function better_fences.on_rightclick(pos, node, clicker, itemstack, pointed_thing)
+    if minetest.is_protected(pos, clicker:get_player_name()) then minetest.record_protection_violation(pos, clicker:get_player_name()); return end
+    local def = minetest.registered_nodes[node.name]
+    if not def then minetest.log("error", "Could not get node definition for fence: "..node.name); return; end
+
+    local newnode = {name=(node.name == def._end_fence and def._regular_fence or def._end_fence)}
+    minetest.set_node(pos, newnode)
+end
 
 -- The bulk of this function is based off the function in the default mod.
 function better_fences.register_fence(name, def)
@@ -121,6 +132,9 @@ function better_fences.register_fence(name, def)
         groups = {},
         on_place = better_fences.on_place,
         on_dig = better_fences.on_dig,
+        on_rightclick = better_fences.on_rightclick,
+        groups = {choppy = 2, oddly_breakable_by_hand = 2, flammable = 2, fence = 1},
+        sounds = default.node_sound_wood_defaults(),
 
         -- For figuring out which fence to place
         _end_fence = name.."_end",
@@ -143,7 +157,7 @@ function better_fences.register_fence(name, def)
     minetest.register_node(name, regular_fence_fields)
 
     local end_fence_fields = table.copy(def)
-    end_fence_fields.connects_to = {"group:fence", "group:crumbly", "group:cracky", "group:snappy", "group:choppy", "group:oddly_breakable_by_hand",}
+    end_fence_fields.connects_to = {"group:fence", "group:crumbly", "group:cracky", "group:snappy", "group:choppy", "group:oddly_breakable_by_hand", "group:dig_immediate"}
     end_fence_fields.groups.end_fence = 1
     end_fence_fields.groups.not_in_creative_inventory = 1
     end_fence_fields.description = def.description.." End (you hacker you!)"
@@ -151,9 +165,8 @@ function better_fences.register_fence(name, def)
 
     minetest.register_node(name.."_end", end_fence_fields)
 
-    if def.craft then
-        minetest.register_craft(def.craft)
-        def.craft = nil
+    if def._craft then
+        minetest.register_craft(def._craft)
     else
         minetest.register_craft({
             output = name .. " 4",
@@ -167,86 +180,34 @@ end
 
 -- Unregister default fences
 local default_fences = {
-    "default:fence_wood",
-    "default:fence_acacia_wood",
-    "default:fence_junglewood",
-    "default:fence_pine_wood",
-    "default:fence_aspen_wood",
+    {name = "fence_wood",        def = {description="Wooden Fence",      texture = "default_fence_wood.png",        material = "default:wood"}},
+    {name = "fence_acacia_wood", def = {description="Acacia Fence",      texture = "default_fence_acacia_wood.png", material = "default:acacia_wood"}},
+    {name = "fence_junglewood",  def = {description="Jungle Wood Fence", texture = "default_fence_junglewood.png",  material = "default:junglewood"}},
+    {name = "fence_pine_wood",   def = {description="Pine Fence",        texture = "default_fence_pine_wood.png",   material = "default:pine_wood"}},
+    {name = "fence_aspen_wood",  def = {description="Aspen Fence",       texture = "default_fence_aspen_wood.png",  material = "default:aspen_wood"}},
 }
 
 for _, f in pairs(default_fences) do
-    minetest.unregister_item(f)
+    minetest.unregister_item("default:"..f.name)
+    better_fences.register_fence("better_fences:"..f.name, f.def)
+    minetest.register_alias("default:"..f.name, "better_fences:"..f.name)
 end
-
--- Register new fences
-better_fences.register_fence("better_fences:fence_wood", {
-    description = "Wooden Fence",
-    texture = "default_fence_wood.png",
-    material = "default:wood",
-    groups = {choppy = 2, oddly_breakable_by_hand = 2, flammable = 2, fence = 1},
-    sounds = default.node_sound_wood_defaults()
-})
-minetest.register_alias("default:fence_wood", "better_fences:fence_wood")
-
-
-better_fences.register_fence("better_fences:fence_acacia_wood", {
-    description = "Acacia Fence",
-    texture = "default_fence_acacia_wood.png",
-    material = "default:acacia_wood",
-    groups = {choppy = 2, oddly_breakable_by_hand = 2, flammable = 2, fence = 1},
-    sounds = default.node_sound_wood_defaults()
-})
-minetest.register_alias("default:fence_acacia_wood", "better_fences:fence_acacia_wood")
-
-
-better_fences.register_fence("better_fences:fence_junglewood", {
-    description = "Jungle Wood Fence",
-    texture = "default_fence_junglewood.png",
-    material = "default:junglewood",
-    groups = {choppy = 2, oddly_breakable_by_hand = 2, flammable = 2, fence = 1},
-    sounds = default.node_sound_wood_defaults()
-})
-minetest.register_alias("default:fence_junglewood", "better_fences:fence_junglewood")
-
-
-better_fences.register_fence("better_fences:fence_pine_wood", {
-    description = "Pine Fence",
-    texture = "default_fence_pine_wood.png",
-    material = "default:pine_wood",
-    groups = {choppy = 3, oddly_breakable_by_hand = 2, flammable = 3, fence = 1},
-    sounds = default.node_sound_wood_defaults()
-})
-minetest.register_alias("default:fence_pine_wood", "better_fences:fence_pine_wood")
-
-
-better_fences.register_fence("better_fences:fence_aspen_wood", {
-    description = "Aspen Fence",
-    texture = "default_fence_aspen_wood.png",
-    material = "default:aspen_wood",
-    groups = {choppy = 3, oddly_breakable_by_hand = 2, flammable = 3, fence = 1},
-    sounds = default.node_sound_wood_defaults()
-})
-minetest.register_alias("default:fence_pine_wood", "better_fences:fence_pine_wood")
 
 -- Also register walls
 if minetest.get_modpath("walls") then
     local default_walls = {
-        "walls:cobble",
-        "walls:mossycobble",
-        "walls:desertcobble",
+        {name = "cobble",       def = {description="Cobblestone Wall",        texture = "default_cobble.png",        material = "default:cobble"}},
+        {name = "mossycobble",  def = {description="Mossy Cobblestone Wal",   texture = "default_mossycobble.png",   material = "default:mossycobble"}},
+        {name = "desertcobble", def = {description="Desert Cobblestone Wall", texture = "default_desert_cobble.png", material = "default:desert_cobble"}},
     }
 
     for _, f in pairs(default_walls) do
-        minetest.unregister_item(f)
-    end
+        minetest.unregister_item("default:"..f.name)
 
-    function better_fences.register_wall(wall_name, wall_desc, wall_texture, wall_mat)
-        better_fences.register_fence(wall_name, {
-            description = wall_desc,
-            texture = wall_texture,
+        -- Walls require special nodeboxes
+        local fields = {
             wield_image = false,
             inventory_image = false,
-            material = wall_mat,
             groups = { cracky = 3, wall = 1, stone = 2 },
             sounds = default.node_sound_stone_defaults(),
             node_box = {
@@ -258,23 +219,19 @@ if minetest.get_modpath("walls") then
                 connect_back = {{-3/16, -1/2,  1/4,  3/16, 3/8,  1/2}},
                 connect_right = {{ 1/4, -1/2, -3/16,  1/2, 3/8,  3/16}},
             },
-            craft = {
-                output = wall_name.." 6",
+            _craft = {
+                output = "better_fences:wall_"..f.name.." 6",
                 recipe = {
                     { '', '', '' },
-                    { wall_mat, wall_mat, wall_mat},
-                    { wall_mat, wall_mat, wall_mat},
+                    { f.def.material, f.def.material, f.def.material},
+                    { f.def.material, f.def.material, f.def.material},
                 }
             },
-        })
+        }
+        -- Insert wall-specific fields
+        for k,v in pairs(f.def) do fields[k] = v end
+
+        better_fences.register_fence("better_fences:wall_"..f.name, fields)
+        minetest.register_alias("default:"..f.name, "better_fences:wall_"..f.name)
     end
-
-    better_fences.register_wall("better_fences:wall_cobble", "Cobblestone Wall", "default_cobble.png", "default:cobble")
-    minetest.register_alias("walls:cobble", "better_fences:wall_cobble")
-
-    better_fences.register_wall("better_fences:wall_mossycobble", "Mossy Cobblestone Wall", "default_mossycobble.png", "default:mossycobble")
-    minetest.register_alias("walls:mossycobble", "better_fences:wall_mossycobble")
-
-    better_fences.register_wall("better_fences:wall_desertcobble", "Desert Cobblestone Wall", "default_desert_cobble.png", "default:desert_cobble")
-    minetest.register_alias("walls:desertcobble", "better_fences:wall_desertcobble")
 end

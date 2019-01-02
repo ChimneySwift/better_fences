@@ -202,7 +202,7 @@ if minetest.get_modpath("walls") then
     }
 
     for _, f in pairs(default_walls) do
-        minetest.unregister_item("default:"..f.name)
+        minetest.unregister_item("walls:"..f.name)
 
         -- Walls require special nodeboxes
         local fields = {
@@ -232,6 +232,6 @@ if minetest.get_modpath("walls") then
         for k,v in pairs(f.def) do fields[k] = v end
 
         better_fences.register_fence("better_fences:wall_"..f.name, fields)
-        minetest.register_alias("default:"..f.name, "better_fences:wall_"..f.name)
+        minetest.register_alias("walls:"..f.name, "better_fences:wall_"..f.name)
     end
 end
